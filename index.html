@@ -29,32 +29,23 @@
 
     <!-- Main Content -->
     <main class="container">
-        <!-- Hot Stories Section -->
-        <section class="mt-5" id="stories-section">
-            <div class="section-header">
-                <h2 class="section-title">HOT STORIES</h2>
-                <a href="?view=stories" class="view-all-link" id="view-all-stories">View All <i class="fas fa-angle-right ms-1"></i></a>
-            </div>
-            
-            <div class="premium-grid stories-grid" id="stories-grid">
-                <div class="loading-spinner">
-                    <i class="fa-solid fa-circle-notch fa-spin"></i> Loading Stories...
-                </div>
-            </div>
-            
-            <!-- Stories Pagination -->
-            <div class="pagination-container" id="stories-pagination-container" style="display: none; margin-top: 30px;">
-                <button id="stories-prev-page" class="pagination-btn"><i class="fa-solid fa-chevron-left"></i> Previous</button>
-                <span id="stories-page-info" class="page-info">Page 1</span>
-                <button id="stories-next-page" class="pagination-btn">Next <i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-        </section>
+        
+        <!-- Top Navigation -->
+        <div class="pill-nav" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+            <a href="?view=videos" id="top-nav-videos" class="tab-btn active"><i class="fa-solid fa-play"></i> Videos</a>
+            <a href="?view=stories" id="top-nav-stories" class="tab-btn"><i class="fa-solid fa-book-open"></i> Stories</a>
+        </div>
 
         <!-- Exclusives (Videos) Section -->
-        <section class="mt-5 mb-5" id="videos-section">
+        <section class="mt-5" id="videos-section">
             <div class="section-header">
                 <h2 class="section-title">EXCLUSIVES</h2>
                 <a href="?view=videos" class="view-all-link" id="view-all-videos">View All <i class="fas fa-angle-right ms-1"></i></a>
+            </div>
+            
+            <div class="sort-controls" id="videos-sort-controls" style="display: none; margin-bottom: 20px; gap: 10px;">
+                <button class="sort-btn active" data-sort="new"><i class="fa-solid fa-clock"></i> New Post</button>
+                <button class="sort-btn" data-sort="views"><i class="fa-solid fa-fire"></i> Most Viewed</button>
             </div>
             
             <div class="premium-grid videos-grid" id="videos-grid">
@@ -68,6 +59,32 @@
                 <button id="prev-page" class="pagination-btn"><i class="fa-solid fa-chevron-left"></i> Previous</button>
                 <span id="page-info" class="page-info">Page 1</span>
                 <button id="next-page" class="pagination-btn">Next <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </section>
+
+        <!-- Hot Stories Section -->
+        <section class="mt-5 mb-5" id="stories-section">
+            <div class="section-header">
+                <h2 class="section-title">HOT STORIES</h2>
+                <a href="?view=stories" class="view-all-link" id="view-all-stories">View All <i class="fas fa-angle-right ms-1"></i></a>
+            </div>
+            
+            <div class="sort-controls" id="stories-sort-controls" style="display: none; margin-bottom: 20px; gap: 10px;">
+                <button class="sort-btn active" data-sort="new"><i class="fa-solid fa-clock"></i> New Post</button>
+                <button class="sort-btn" data-sort="views"><i class="fa-solid fa-fire"></i> Most Viewed</button>
+            </div>
+            
+            <div class="premium-grid stories-grid" id="stories-grid">
+                <div class="loading-spinner">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Loading Stories...
+                </div>
+            </div>
+            
+            <!-- Stories Pagination -->
+            <div class="pagination-container" id="stories-pagination-container" style="display: none; margin-top: 30px;">
+                <button id="stories-prev-page" class="pagination-btn"><i class="fa-solid fa-chevron-left"></i> Previous</button>
+                <span id="stories-page-info" class="page-info">Page 1</span>
+                <button id="stories-next-page" class="pagination-btn">Next <i class="fa-solid fa-chevron-right"></i></button>
             </div>
         </section>
     </main>
