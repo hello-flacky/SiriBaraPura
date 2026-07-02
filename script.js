@@ -38,83 +38,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const nextPageBtn = document.getElementById('next-page');
     const pageInfo = document.getElementById('page-info');
     const searchInput = document.querySelector('.search-box input');
-    
-    // View Mode from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    let currentView = urlParams.get('view'); // 'videos' or 'stories' or null
-
-    document.getElementById('view-all-videos').addEventListener('click', (e) => {
-        e.preventDefault();
-        currentView = 'videos';
-        history.pushState({ view: 'videos' }, '', '?view=videos');
-        document.getElementById('stories-section').style.display = 'none';
-        
-        const videosGrid = document.getElementById('videos-grid');
-        if (videosGrid) {
-            videosGrid.innerHTML = '<div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading Videos...</div>';
-            setTimeout(() => { renderVideos(videos, 1); }, 400);
-        }
-    });
-
-    document.getElementById('view-all-stories').addEventListener('click', (e) => {
-        e.preventDefault();
-        currentView = 'stories';
-        history.pushState({ view: 'stories' }, '', '?view=stories');
-        document.getElementById('videos-section').style.display = 'none';
-        
-        const storiesGrid = document.getElementById('stories-grid');
-        if (storiesGrid) {
-            storiesGrid.innerHTML = '<div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading Stories...</div>';
-            setTimeout(() => { renderStories(stories, 1); }, 400);
-        }
-    });
-
-    // Top Navigation (Pill Nav) logic
-    const topNavVideos = document.getElementById('top-nav-videos');
-    const topNavStories = document.getElementById('top-nav-stories');
-    
-    if (topNavVideos) {
-        topNavVideos.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('view-all-videos').click(); // Reuse existing logic
-            topNavVideos.classList.add('active');
-            if (topNavStories) topNavStories.classList.remove('active');
-        });
-    }
-    
-    if (topNavStories) {
-        topNavStories.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('view-all-stories').click(); // Reuse existing logic
-            topNavStories.classList.add('active');
-            if (topNavVideos) topNavVideos.classList.remove('active');
-        });
-    }
+    const filterButtons = document.querySelectorAll('.pill-nav a');
 
     let videos = [];
     let stories = [];
     let currentVideoId = null;
-    let videosSort = 'new';
-    let storiesSort = 'new';
-    
-    // Setup Sort Buttons
-    document.querySelectorAll('#videos-sort-controls .sort-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('#videos-sort-controls .sort-btn').forEach(b => b.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-            videosSort = e.currentTarget.dataset.sort;
-            renderVideos(videos, 1);
-        });
-    });
-    
-    document.querySelectorAll('#stories-sort-controls .sort-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('#stories-sort-controls .sort-btn').forEach(b => b.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-            storiesSort = e.currentTarget.dataset.sort;
-            renderStories(stories, 1);
-        });
-    });
 
     // Setup or Increment Site Visits
     try {
@@ -137,18 +65,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             querySnapshot.forEach((doc) => {
                 videos.push({ id: doc.id, ...doc.data() });
             });
-            
-            // Sort newest first by default
-            videos.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
-            
-            // Hide section if viewing only stories
-            if (currentView === 'stories') {
-                document.getElementById('videos-section').style.display = 'none';
-            } else {
-                renderVideos(videos, 1);
-            }
+            applyFilter('All Videos'); // Default view
             
             // Check for shared video link
+            const urlParams = new URLSearchParams(window.location.search);
             const sharedVideoId = urlParams.get('v');
             if (sharedVideoId) {
                 const videoToPlay = videos.find(v => v.id === sharedVideoId);
@@ -158,10 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (error) {
             console.error("Error fetching videos: ", error);
-            const videosGrid = document.getElementById('videos-grid');
-            if(videosGrid) {
-                videosGrid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1; text-align:center; padding: 40px;">Please configure Firebase in firebase-config.js to see videos.</p>';
-            }
+            videoGrid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1; text-align:center; padding: 40px;">Please configure Firebase in firebase-config.js to see videos.</p>';
         }
     }
 
@@ -173,18 +90,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             querySnapshot.forEach((doc) => {
                 stories.push({ id: doc.id, ...doc.data() });
             });
-            
-            if (currentView === 'videos') {
-                document.getElementById('stories-section').style.display = 'none';
-            } else {
-                renderStories(stories, 1);
-            }
         } catch (error) {
             console.error("Error fetching stories: ", error);
-            const storiesGrid = document.getElementById('stories-grid');
-            if(storiesGrid) {
-                storiesGrid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1; text-align:center; padding: 40px;">Failed to load stories.</p>';
-            }
         }
     }
 
@@ -211,81 +118,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Render Grid
-    function renderVideos(videoList = currentVideoList, page = 1) {
+    function renderVideos(videoList = currentVideoList, page = currentPage) {
         currentVideoList = videoList;
         currentPage = page;
-        const videosGrid = document.getElementById('videos-grid');
-        if (!videosGrid) return;
-        videosGrid.innerHTML = '';
+        videoGrid.innerHTML = '';
 
         if (videoList.length === 0) {
-            videosGrid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1; text-align:center; padding: 40px;">No videos found.</p>';
+            videoGrid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1; text-align:center; padding: 40px;">No videos found.</p>';
             if (paginationContainer) paginationContainer.style.display = 'none';
             return;
         }
 
-        let sortedVideos = [...videoList];
-        if (videosSort === 'new') {
-            sortedVideos.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
-        } else if (videosSort === 'views') {
-            sortedVideos.sort((a, b) => (b.views || 0) - (a.views || 0));
-        }
-
-        let videosToRender = sortedVideos;
-        
-        // If not explicitly viewing all videos, limit to 10 and hide pagination
-        if (currentView !== 'videos') {
-            videosToRender = sortedVideos.slice(0, 10);
-            if (paginationContainer) paginationContainer.style.display = 'none';
-            const viewAllLink = document.getElementById('view-all-videos');
-            if (viewAllLink) viewAllLink.style.display = 'block';
-            const sortControls = document.getElementById('videos-sort-controls');
-            if (sortControls) sortControls.style.display = 'none';
-        } else {
-            const startIndex = (currentPage - 1) * videosPerPage;
-            const endIndex = startIndex + videosPerPage;
-            videosToRender = sortedVideos.slice(startIndex, endIndex);
-            const viewAllLink = document.getElementById('view-all-videos');
-            if (viewAllLink) viewAllLink.style.display = 'none';
-            const sortControls = document.getElementById('videos-sort-controls');
-            if (sortControls) sortControls.style.display = 'flex';
-        }
+        const startIndex = (currentPage - 1) * videosPerPage;
+        const endIndex = startIndex + videosPerPage;
+        const videosToRender = videoList.slice(startIndex, endIndex);
 
         videosToRender.forEach(video => {
             const card = document.createElement('div');
-            card.className = 'modern-card';
-
-            const isCollection = video.type === 'collection';
-            const badgeIcon = isCollection ? '<i class="fa-solid fa-layer-group"></i>' : '<i class="fa-solid fa-play"></i>';
-            const badgeText = isCollection ? 'Collection' : 'Video';
+            card.className = 'video-card';
             
-            let countBadge = '';
-            if (isCollection && video.streamtapeIds && video.streamtapeIds.length > 0) {
-                countBadge = `<span class="collection-count-badge">${video.streamtapeIds.length} Videos</span>`;
-            }
-            
-            let newBadge = '';
-            if (video.dateAdded) {
-                const diffTime = Math.abs(new Date() - new Date(video.dateAdded));
-                if (diffTime < (24 * 60 * 60 * 1000)) { // 24 hours
-                    newBadge = `<span class="new-badge">NEW</span>`;
-                }
-            }
-            
-            const dateStr = video.dateAdded ? new Date(video.dateAdded).toLocaleDateString() : 'Unknown';
+            const dateStr = video.dateAdded ? new Date(video.dateAdded).toLocaleDateString() : 'Unknown Date';
 
             card.innerHTML = `
-                <div class="card-img-wrapper img-protect-container" style="aspect-ratio: 16/10; height: auto;">
-                    <span class="type-badge badge-video">${badgeIcon} ${badgeText}</span>
-                    ${newBadge}
-                    ${countBadge}
-                    <img src="${video.thumbnail}" class="protected-img" onerror="this.src='https://via.placeholder.com/320x180.png?text=No+Thumbnail'">
+                <div class="video-thumb">
+                    <img src="${video.thumbnail}" alt="${video.title}" onerror="this.style.display='none'">
+                    <div class="play-overlay">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                    <div class="thumb-fallback">
+                        <i class="fa-solid fa-film"></i>
+                    </div>
                 </div>
-                <div class="card-details">
-                    <h6 class="fw-bold text-truncate small mb-0" style="color: var(--text-main); font-weight: 600; font-size: 0.95rem; margin-bottom: 8px;">${video.title}</h6>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
-                        <span class="date" style="color: var(--text-muted); font-size: 0.75rem;"><i class="fa-regular fa-calendar"></i> ${dateStr}</span>
-                        <span class="date" style="color: var(--hot-pink); font-size: 0.75rem;"><i class="fa-solid fa-eye"></i> ${formatViews(video.views)}</span>
+                <div class="video-details">
+                    <h4>${video.title}</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                        <span class="date"><i class="fa-regular fa-calendar"></i> ${dateStr}</span>
+                        <span class="date" style="color: var(--primary);"><i class="fa-solid fa-eye"></i> ${formatViews(video.views)}</span>
                     </div>
                 </div>
             `;
@@ -294,127 +162,115 @@ document.addEventListener('DOMContentLoaded', async () => {
                 playVideo(video);
             });
 
-            videosGrid.appendChild(card);
+            videoGrid.appendChild(card);
         });
         
         updatePagination();
     }
 
-    function renderStories(storyList = stories, page = 1) {
-        const storiesGrid = document.getElementById('stories-grid');
-        const storiesPagination = document.getElementById('stories-pagination-container');
-        if (!storiesGrid) return;
-        storiesGrid.innerHTML = '';
+    function renderStories(storyList = currentVideoList, page = currentPage) {
+        currentVideoList = storyList;
+        currentPage = page;
+        videoGrid.innerHTML = '';
 
         if (storyList.length === 0) {
-            storiesGrid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1; text-align:center; padding: 40px;">No stories found.</p>';
-            if (storiesPagination) storiesPagination.style.display = 'none';
+            videoGrid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1; text-align:center; padding: 40px;">No stories found.</p>';
+            if (paginationContainer) paginationContainer.style.display = 'none';
             return;
         }
 
-        let sortedStories = [...storyList];
-        if (storiesSort === 'new') {
-            sortedStories.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
-        } else if (storiesSort === 'views') {
-            sortedStories.sort((a, b) => (b.views || 0) - (a.views || 0));
-        }
-        
-        let storiesToRender = sortedStories;
-
-        if (currentView !== 'stories') {
-            storiesToRender = sortedStories.slice(0, 6);
-            if (storiesPagination) storiesPagination.style.display = 'none';
-            const viewAllLink = document.getElementById('view-all-stories');
-            if (viewAllLink) viewAllLink.style.display = 'block';
-            const sortControls = document.getElementById('stories-sort-controls');
-            if (sortControls) sortControls.style.display = 'none';
-        } else {
-            const startIndex = (page - 1) * videosPerPage;
-            const endIndex = startIndex + videosPerPage;
-            storiesToRender = sortedStories.slice(startIndex, endIndex);
-            
-            const viewAllLink = document.getElementById('view-all-stories');
-            if (viewAllLink) viewAllLink.style.display = 'none';
-            const sortControls = document.getElementById('stories-sort-controls');
-            if (sortControls) sortControls.style.display = 'flex';
-            
-            if (storiesPagination) {
-                const totalPages = Math.ceil(sortedStories.length / videosPerPage);
-                if (totalPages > 1) {
-                    storiesPagination.style.display = 'flex';
-                    document.getElementById('stories-page-info').textContent = `Page ${page} of ${totalPages}`;
-                    document.getElementById('stories-prev-page').disabled = page === 1;
-                    document.getElementById('stories-next-page').disabled = page === totalPages;
-                    
-                    document.getElementById('stories-prev-page').onclick = () => renderStories(storyList, page - 1);
-                    document.getElementById('stories-next-page').onclick = () => renderStories(storyList, page + 1);
-                } else {
-                    storiesPagination.style.display = 'none';
-                }
-            }
-        }
+        const startIndex = (currentPage - 1) * videosPerPage;
+        const endIndex = startIndex + videosPerPage;
+        const storiesToRender = storyList.slice(startIndex, endIndex);
 
         storiesToRender.forEach(story => {
             const card = document.createElement('div');
-            card.className = 'modern-card';
+            card.className = 'story-card';
 
-            let newBadge = '';
-            if (story.dateAdded) {
-                const diffTime = Math.abs(new Date() - new Date(story.dateAdded));
-                if (diffTime < (24 * 60 * 60 * 1000)) { // 24 hours
-                    newBadge = `<span class="new-badge">NEW</span>`;
-                }
-            }
-            
-            const dateStr = story.dateAdded ? new Date(story.dateAdded).toLocaleDateString() : 'Unknown';
+            const snippet = story.content ? story.content.substring(0, 150) + '...' : '';
 
             card.innerHTML = `
-                <div class="card-img-wrapper img-protect-container" style="aspect-ratio: 16/10; height: auto;">
-                    <span class="type-badge badge-story">Story</span>
-                    ${newBadge}
-                    <img src="${story.thumbnail}" class="protected-img" onerror="this.src='https://via.placeholder.com/320x180.png?text=No+Thumbnail'">
-                </div>
-                <div class="card-details">
-                    <h6 class="fw-bold text-truncate mb-2" style="color: var(--text-main); font-size: 0.95rem; margin-bottom: 8px;">${story.title}</h6>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
-                        <small style="color: var(--hot-pink); font-weight: 600;"><i class="far fa-user me-1"></i>Admin</small>
-                        <small style="color: var(--text-muted); font-size: 0.75rem;"><i class="far fa-clock me-1"></i>${dateStr}</small>
-                    </div>
+                <div class="story-thumb" style="background-image: url('${story.thumbnail}');"></div>
+                <div class="story-details">
+                    <h4>${story.title}</h4>
+                    <div class="story-snippet">${snippet}</div>
+                    <button class="read-more-btn">Read More</button>
                 </div>
             `;
 
-            card.addEventListener('click', () => {
+            card.querySelector('.read-more-btn').addEventListener('click', () => {
                 openStoryModal(story);
             });
 
-            storiesGrid.appendChild(card);
+            videoGrid.appendChild(card);
         });
+        
+        updatePagination();
     }
 
-    // Filter Logic (Search functionality applies to both)
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
+    // Filter Logic
+    function applyFilter(filterType) {
+        if (filterType === 'Stories') {
+            let sortedStories = [...stories];
+            sortedStories.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
             const query = searchInput.value.toLowerCase().trim();
-            
-            let filteredVideos = videos;
             if (query) {
-                filteredVideos = videos.filter(v => v.title.toLowerCase().includes(query));
+                sortedStories = sortedStories.filter(s => s.title.toLowerCase().includes(query));
             }
-            renderVideos(filteredVideos, 1);
-            
-            let filteredStories = stories;
-            if (query) {
-                filteredStories = stories.filter(s => s.title.toLowerCase().includes(query));
-            }
-            renderStories(filteredStories);
-        });
+            renderStories(sortedStories, 1);
+            return;
+        }
+
+        let sortedVideos = [...videos];
+
+        switch (filterType) {
+            case 'Most Viewed':
+                sortedVideos.sort((a, b) => (b.views || 0) - (a.views || 0));
+                break;
+            case 'New Releases':
+                sortedVideos.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
+                break;
+            case 'All Videos':
+            default:
+                sortedVideos.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
+                break;
+        }
+
+        const query = searchInput.value.toLowerCase().trim();
+        if (query) {
+            sortedVideos = sortedVideos.filter(v => v.title.toLowerCase().includes(query));
+        }
+
+        renderVideos(sortedVideos, 1);
     }
+
+    // Filter Button Click Events
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            filterButtons.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            applyFilter(e.target.textContent.trim());
+        });
+    });
+
+    // Search Logic
+    searchInput.addEventListener('input', () => {
+        const activeBtn = document.querySelector('.pill-nav a.active');
+        const filterType = activeBtn ? activeBtn.textContent.trim() : 'New Releases';
+        applyFilter(filterType);
+    });
 
     // Pagination Click Events
     if (prevPageBtn) {
         prevPageBtn.addEventListener('click', () => {
             if (currentPage > 1) {
-                renderVideos(currentVideoList, currentPage - 1);
+                const activeBtn = document.querySelector('.pill-nav a.active');
+                if (activeBtn && activeBtn.textContent.trim() === 'Stories') {
+                    renderStories(currentVideoList, currentPage - 1);
+                } else {
+                    renderVideos(currentVideoList, currentPage - 1);
+                }
                 window.scrollTo({ top: document.querySelector('.main-gallery').offsetTop - 100, behavior: 'smooth' });
             }
         });
@@ -424,7 +280,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         nextPageBtn.addEventListener('click', () => {
             const totalPages = Math.ceil(currentVideoList.length / videosPerPage);
             if (currentPage < totalPages) {
-                renderVideos(currentVideoList, currentPage + 1);
+                const activeBtn = document.querySelector('.pill-nav a.active');
+                if (activeBtn && activeBtn.textContent.trim() === 'Stories') {
+                    renderStories(currentVideoList, currentPage + 1);
+                } else {
+                    renderVideos(currentVideoList, currentPage + 1);
+                }
                 window.scrollTo({ top: document.querySelector('.main-gallery').offsetTop - 100, behavior: 'smooth' });
             }
         });
@@ -434,9 +295,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function playVideo(video) {
         currentVideoId = video.id;
         
+        // Increment view count in Firebase
         try {
             const videoRef = doc(db, 'videos', video.id);
             await updateDoc(videoRef, { views: increment(1) });
+            // Optionally update UI immediately (mocking it until next reload)
             video.views = (video.views || 0) + 1;
         } catch (e) {
             console.error("Could not increment views", e);
@@ -451,34 +314,69 @@ document.addEventListener('DOMContentLoaded', async () => {
             video.streamtapeIds.forEach(id => {
                 videoContainer.innerHTML += `
                     <div class="collection-video-item">
-                        <iframe src="https://streamtape.com/e/${id}" allowfullscreen allowtransparency allow="autoplay; fullscreen" scrolling="no"></iframe>
+                        <iframe 
+                            src="https://streamtape.com/e/${id}" 
+                            allowfullscreen 
+                            allowtransparency 
+                            allow="autoplay; fullscreen" 
+                            scrolling="no">
+                        </iframe>
                     </div>
                 `;
             });
         } else {
             videoContainer.classList.remove('collection-wrapper');
-            videoContainer.innerHTML = `<iframe src="https://streamtape.com/e/${video.streamtapeId}" allowfullscreen allowtransparency allow="autoplay; fullscreen" scrolling="no"></iframe>`;
+            const streamtapeEmbedUrl = `https://streamtape.com/e/${video.streamtapeId}`;
+            videoContainer.innerHTML = `
+                <iframe 
+                    src="${streamtapeEmbedUrl}" 
+                    allowfullscreen 
+                    allowtransparency 
+                    allow="autoplay; fullscreen" 
+                    scrolling="no">
+                </iframe>
+            `;
         }
         
+        if (history.state?.modal !== true) {
+            history.pushState({ modal: true }, "");
+        }
+
         modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        
-        // History API for Android Back Button handling
-        history.pushState({ modalOpen: true }, '');
+        document.body.style.overflow = 'hidden'; 
     }
 
-    function closeModal() {
+    // Modal Close Logic
+    function closeModal(isPopState = false) {
+        if (typeof isPopState !== 'boolean') {
+            isPopState = false;
+        }
+
         modal.classList.add('hidden');
         document.body.style.overflow = 'auto';
-        
-        const videoContainer = document.getElementById('video-container');
-        videoContainer.innerHTML = '';
         currentVideoId = null;
         
-        if (history.state && history.state.modalOpen) {
+        // Remove ?v= from URL silently
+        const url = new URL(window.location);
+        url.searchParams.delete('v');
+        window.history.replaceState({}, document.title, url.toString());
+        
+        setTimeout(() => {
+            videoContainer.innerHTML = '';
+            videoContainer.classList.remove('collection-wrapper');
+        }, 300);
+
+        if (!isPopState && history.state?.modal === true) {
             history.back();
         }
     }
+
+    // Handle back button on mobile/desktop
+    window.addEventListener('popstate', () => {
+        if (modal && !modal.classList.contains('hidden')) {
+            closeModal(true);
+        }
+    });
 
     if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
     
@@ -509,6 +407,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const storyModal = document.getElementById('story-modal');
 
     function openStoryModal(story) {
+        // Increment story view count (optional, can skip for now to save writes)
         try {
             updateDoc(doc(db, 'stories', story.id), { views: increment(1) });
         } catch(e) {}
@@ -519,16 +418,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         storyModal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
-        history.pushState({ modalOpen: true }, '');
     }
 
     if (closeStoryModalBtn) {
         closeStoryModalBtn.addEventListener('click', () => {
             storyModal.classList.add('hidden');
             document.body.style.overflow = 'auto';
-            if (history.state && history.state.modalOpen) {
-                history.back();
-            }
         });
     }
 
@@ -537,48 +432,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (e.target === storyModal) {
                 storyModal.classList.add('hidden');
                 document.body.style.overflow = 'auto';
-                if (history.state && history.state.modalOpen) {
-                    history.back();
-                }
             }
         });
     }
-    
-    // Listen for back button press
-    window.addEventListener('popstate', (e) => {
-        // Handle Modals
-        if (modal && !modal.classList.contains('hidden')) {
-            modal.classList.add('hidden');
-            document.body.style.overflow = 'auto';
-            document.getElementById('video-container').innerHTML = '';
-            currentVideoId = null;
-            return;
-        }
-        if (storyModal && !storyModal.classList.contains('hidden')) {
-            storyModal.classList.add('hidden');
-            document.body.style.overflow = 'auto';
-            return;
-        }
-
-        // Handle View state changes
-        const urlParams = new URLSearchParams(window.location.search);
-        currentView = urlParams.get('view');
-        
-        if (currentView === 'videos') {
-            document.getElementById('stories-section').style.display = 'none';
-            document.getElementById('videos-section').style.display = 'block';
-            renderVideos(videos, 1);
-        } else if (currentView === 'stories') {
-            document.getElementById('videos-section').style.display = 'none';
-            document.getElementById('stories-section').style.display = 'block';
-            renderStories(stories, 1);
-        } else {
-            document.getElementById('videos-section').style.display = 'block';
-            document.getElementById('stories-section').style.display = 'block';
-            renderVideos(videos, 1);
-            renderStories(stories, 1);
-        }
-    });
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
