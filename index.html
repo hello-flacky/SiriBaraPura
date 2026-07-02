@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>සිරි බර පුර</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="public-body">
+    <!-- Premium Header -->
+    <header class="premium-header">
+        <div class="header-content">
+            <div class="logo-center">
+                <i class="fa-solid fa-crown accent-icon"></i>
+                <h1>සිරි බර පුර</h1>
+            </div>
+            
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Search videos...">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Hot Stories Section -->
+        <section class="mt-5" id="stories-section">
+            <div class="section-header">
+                <h2 class="section-title">HOT STORIES</h2>
+                <a href="?view=stories" class="view-all-link" id="view-all-stories">View All <i class="fas fa-angle-right ms-1"></i></a>
+            </div>
+            
+            <div class="premium-grid stories-grid" id="stories-grid">
+                <div class="loading-spinner">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Loading Stories...
+                </div>
+            </div>
+            
+            <!-- Stories Pagination -->
+            <div class="pagination-container" id="stories-pagination-container" style="display: none; margin-top: 30px;">
+                <button id="stories-prev-page" class="pagination-btn"><i class="fa-solid fa-chevron-left"></i> Previous</button>
+                <span id="stories-page-info" class="page-info">Page 1</span>
+                <button id="stories-next-page" class="pagination-btn">Next <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </section>
+
+        <!-- Exclusives (Videos) Section -->
+        <section class="mt-5 mb-5" id="videos-section">
+            <div class="section-header">
+                <h2 class="section-title">EXCLUSIVES</h2>
+                <a href="?view=videos" class="view-all-link" id="view-all-videos">View All <i class="fas fa-angle-right ms-1"></i></a>
+            </div>
+            
+            <div class="premium-grid videos-grid" id="videos-grid">
+                <div class="loading-spinner">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Loading Videos...
+                </div>
+            </div>
+            
+            <!-- Videos Pagination -->
+            <div class="pagination-container" id="pagination-container" style="display: none; margin-top: 30px;">
+                <button id="prev-page" class="pagination-btn"><i class="fa-solid fa-chevron-left"></i> Previous</button>
+                <span id="page-info" class="page-info">Page 1</span>
+                <button id="next-page" class="pagination-btn">Next <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Player Modal -->
+    <div id="player-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-controls">
+            <button class="close-modal" id="close-modal">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+            <div class="adblock-warning">
+                <i class="fa-solid fa-triangle-exclamation"></i> වීඩියෝ එක ප්ලේ වෙන්නෙ නැත්නම් Ad Blocker එක Disable කරන්න.
+            </div>
+        </div>
+        <div class="modal-content premium-modal">
+            <div class="video-wrapper" id="video-container">
+                <!-- Streamtape iframe injects here -->
+            </div>
+            <div class="video-info">
+                <div class="video-info-layout">
+                    <div class="video-text">
+                        <h3 id="modal-video-title">Video Title</h3>
+                        <p id="modal-video-desc">Description goes here...</p>
+                    </div>
+                    <div class="video-actions">
+                        <a href="https://omg10.com/4/11219718" target="_blank" class="download-btn">
+                            <i class="fa-solid fa-download"></i> Download
+                        </a>
+                        <button id="share-btn" class="share-btn">
+                            <i class="fa-solid fa-share-nodes"></i> Share
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Story Modal -->
+    <div id="story-modal" class="modal hidden">
+        <div class="modal-backdrop story-backdrop"></div>
+        <div class="modal-controls">
+            <button class="close-modal story-close" id="close-story-modal">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+        </div>
+        <div class="modal-content premium-modal story-modal-content">
+            <div class="story-header-image" id="story-modal-image"></div>
+            <div class="story-info">
+                <div class="story-info-inner">
+                    <h3 id="story-modal-title">Story Title</h3>
+                    <div class="story-content-text" id="story-modal-content">
+                        <!-- Text content injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

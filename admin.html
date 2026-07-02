@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - සිරි බර පුර</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-body">
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-card">
+            <h2><i class="fa-solid fa-lock"></i> Admin Login</h2>
+            <p>Please enter your PIN to access the dashboard.</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <input type="password" id="admin-pin" placeholder="Enter PIN" required autocomplete="off">
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+                <div id="login-message" class="admin-message hidden" style="margin-top: 15px;"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Content -->
+    <div id="admin-wrapper" style="display: none;">
+        <header class="admin-header">
+        <div class="logo-area">
+            <i class="fa-solid fa-gear primary-color"></i>
+            <h1>සිරි බර පුර <span>Admin</span></h1>
+        </div>
+        <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Site</a>
+    </header>
+
+    <main class="admin-container">
+        <div class="admin-tabs">
+            <button class="tab-btn active" data-tab="dashboard-tab"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
+            <button class="tab-btn" data-tab="upload-tab"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Video</button>
+            <button class="tab-btn" data-tab="upload-story-tab"><i class="fa-solid fa-book-open"></i> Upload Story</button>
+        </div>
+
+        <div id="dashboard-tab" class="tab-content active">
+        <!-- Dashboard Overview -->
+        <section class="admin-card dashboard-overview">
+            <h2><i class="fa-solid fa-chart-pie"></i> Dashboard Overview</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <i class="fa-solid fa-users stat-icon"></i>
+                    <div class="stat-info">
+                        <h3 id="stat-visits">0</h3>
+                        <p>Total Website Visits</p>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <i class="fa-solid fa-eye stat-icon"></i>
+                    <div class="stat-info">
+                        <h3 id="stat-views">0</h3>
+                        <p>Total Video Views</p>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <i class="fa-solid fa-video stat-icon"></i>
+                    <div class="stat-info">
+                        <h3 id="stat-videos">0</h3>
+                        <p>Total Videos Uploaded</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        </div>
+
+        <div id="upload-tab" class="tab-content">
+        <!-- Add Video Form -->
+        <section class="admin-card">
+            <h2 id="form-title"><i class="fa-solid fa-cloud-arrow-up"></i> Upload New Video</h2>
+            <form id="admin-form" class="admin-form">
+                
+                <div class="form-group" style="flex-direction: row; gap: 20px; margin-bottom: 15px;">
+                    <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="upload-type" value="single" checked> Single Video</label>
+                    <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="upload-type" value="collection"> Video Collection</label>
+                </div>
+
+                <div class="form-group" id="group-video-url">
+                    <label for="video-url">Streamtape Video Link</label>
+                    <input type="url" id="video-url" placeholder="e.g. https://streamtape.com/v/XXXXXXX/">
+                </div>
+
+                <div class="form-group" id="group-collection-urls" style="display: none;">
+                    <label for="collection-urls">Collection Links (One Streamtape URL per line)</label>
+                    <textarea id="collection-urls" rows="6" placeholder="https://streamtape.com/v/XXXX1/&#10;https://streamtape.com/v/XXXX2/"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="video-title">Video Title</label>
+                    <input type="text" id="video-title" placeholder="Enter video title" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="video-thumbnail">Thumbnail URL (Optional)</label>
+                    <input type="url" id="video-thumbnail" placeholder="e.g. https://i.ibb.co/xxxxx/image.jpg (Leave empty to auto-fetch)">
+                </div>
+
+                <div class="form-group">
+                    <label for="video-desc">Description</label>
+                    <textarea id="video-desc" rows="4" placeholder="Enter video description..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" id="submit-btn" class="btn btn-primary" style="flex: 1;">Add Video</button>
+                    <button type="button" id="cancel-edit-btn" class="btn btn-secondary" style="display: none; flex: 1;">Cancel Edit</button>
+                </div>
+                <div id="admin-message" class="admin-message hidden"></div>
+            </form>
+        </section>
+        </div>
+
+        <div id="upload-story-tab" class="tab-content">
+        <!-- Add Story Form -->
+        <section class="admin-card">
+            <h2><i class="fa-solid fa-book-open"></i> Upload New Story</h2>
+            <form id="story-form" class="admin-form">
+                
+                <div class="form-group">
+                    <label for="story-title">Story Title</label>
+                    <input type="text" id="story-title" placeholder="Enter story title" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="story-thumbnail">Thumbnail URL</label>
+                    <input type="url" id="story-thumbnail" placeholder="e.g. https://i.ibb.co/xxxxx/image.jpg" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="story-content">Story Content</label>
+                    <textarea id="story-content" rows="10" placeholder="Write the story here..." required></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" id="story-submit-btn" class="btn btn-primary" style="flex: 1;">Publish Story</button>
+                    <button type="button" id="cancel-story-edit-btn" class="btn btn-secondary" style="display: none; flex: 1;">Cancel Edit</button>
+                </div>
+                <div id="story-message" class="admin-message hidden"></div>
+            </form>
+        </section>
+        </div>
+
+        <div id="manage-tab" class="tab-content active" style="margin-top: 20px;">
+        <!-- Manage Videos (Now part of Dashboard flow visually, or its own container, let's keep it below dashboard) -->
+        <section class="admin-card">
+            <h2><i class="fa-solid fa-list"></i> Manage Videos</h2>
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Thumbnail</th>
+                            <th>Title</th>
+                            <th>Date Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body">
+                        <!-- Rows injected by admin.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Manage Stories -->
+        <section class="admin-card" style="margin-top: 30px;">
+            <h2><i class="fa-solid fa-book"></i> Manage Stories</h2>
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Thumbnail</th>
+                            <th>Title</th>
+                            <th>Date Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-story-table-body">
+                        <!-- Rows injected by admin.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    </div>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
